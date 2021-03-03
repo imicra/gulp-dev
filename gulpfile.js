@@ -1,6 +1,6 @@
 'use strict';
 
-var themename = 'recurs';
+var themename = 'theme-name';
 
 var gulp = require('gulp'),
     plumber = require( 'gulp-plumber' ),
