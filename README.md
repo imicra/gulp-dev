@@ -2,6 +2,7 @@
 
 См.
 - [См. стартовая тема](https://github.com/imicra/imicra-wp/)
+- [См. стартовая тема](https://github.com/imicra/imicra-constructor/)
 
 Описание
 ---------------
@@ -15,4 +16,5 @@
 
 ### Примечания
 
-* `browserSync` настроен на работу с ssl-сертификатом на `localhost`.
+* `browserSync` открывает сайт по адресу `localhost`, поэтому нужно сгенерировать еще один ssl-сертификат для `localhost` и в настройках `browserSync` `https` указать пути для данного сертификата.
+* При работа в Ubuntu или WSL для создания SSL-сертификатов как вариант https://github.com/FiloSottile/mkcert

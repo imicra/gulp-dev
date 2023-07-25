@@ -7,13 +7,14 @@ var gulp = require('gulp'),
     rename = require( 'gulp-rename' ),
     autoprefixer = require('autoprefixer'),
     postcss = require('gulp-postcss'),
-    sass = require('gulp-sass'),
+    sass = require('gulp-sass')(require('sass')),
     cleanCSS = require( 'gulp-clean-css' ),
     sourcemaps = require('gulp-sourcemaps'),
+    webpackStream = require('webpack-stream'),
     notify = require("gulp-notify"),
     browserSync = require('browser-sync').create(),
     concat = require('gulp-concat'),
-    uglify = require( 'gulp-uglify' ),
+    terser = require( 'gulp-terser' ),
     imagemin = require('gulp-imagemin'),
     cheerio = require('gulp-cheerio'),
     replace = require('gulp-replace'),
@@ -43,15 +44,15 @@ gulp.task('serve', function() {
       browser: 'chrome',
       notify: false,
       https: {
-        key: "e:/OpenServer/userdata/config/cert_files/localhost/localhost-server.key",
-        cert: "e:/OpenServer/userdata/config/cert_files/localhost/localhost-server.crt"
+        key: "c:/OpenServer/userdata/config/cert_files/localhost/localhost-server.key",
+        cert: "c:/OpenServer/userdata/config/cert_files/localhost/localhost-server.crt"
       }
     }
   );
 });
 
 gulp.task('sass', function() {
-  return gulp.src(scss + '{style.scss,woocommerce.scss,rtl.scss}')
+  return gulp.src(scss + '{style.scss,woocommerce.scss,rtl.scss,style.inc.scss}')
         .pipe(sourcemaps.init({ loadMaps: true }))
         .pipe(sass({
           outputStyle: 'expanded',
@@ -60,7 +61,7 @@ gulp.task('sass', function() {
           includePaths: [css]
         }).on('error', sass.logError))
         .pipe(postcss([
-          autoprefixer('last 10 versions', '> 1%')
+          autoprefixer('last 2 versions', '> 1%')
         ]))
         .on("error", notify.onError({
           message: "Error: <%= error.message %>",
@@ -71,7 +72,7 @@ gulp.task('sass', function() {
 });
 
 gulp.task( 'minifycss', function() {
-  return gulp.src( css + '{style.css,woocommerce.css,rtl.css}' )
+  return gulp.src( css + '{style.css,woocommerce.css,rtl.css,style.inc.css}' )
   .pipe( sourcemaps.init( { loadMaps: true } ) )
     .pipe( cleanCSS( { compatibility: '*' } ) )
     .pipe( plumber( {
@@ -81,7 +82,7 @@ gulp.task( 'minifycss', function() {
             }
         } ) )
     .pipe( rename( { suffix: '.min' } ) )
-     .pipe( sourcemaps.write( './' ) )
+    .pipe( sourcemaps.write( './' ) )
     .pipe( gulp.dest( css ) )
     .pipe(browserSync.reload({
       stream: true
@@ -103,33 +104,135 @@ gulp.task('libs:css', function() {
 gulp.task('libs:js', function() {
   return gulp.src(src + 'js/*.js')
         .pipe(concat('libs.min.js'))
-        .pipe( uglify() )
+        .pipe( terser() )
         .pipe(gulp.dest(js))
         .pipe(browserSync.reload({
           stream: true
         }));
 });
 
+// main scripts
+gulp.task('script:dev', function() {
+  return gulp.src([js_dev + '*.js', '!' + js_dev + '*.add.js', '!' + js_dev + '*.inc.js'])
+    .pipe(webpackStream({
+      mode: 'none',
+      output: {
+        filename: 'scripts.js',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env']
+            }
+          }
+        ]
+      }
+    }))
+    .pipe(gulp.dest(js))
+    .pipe(browserSync.reload({
+      stream: true
+    }));
+});
+
 gulp.task('script:min', function() {
-  return gulp.src([js_dev + '*.js', '!' + js_dev + 'customizer.js', '!' + js_dev + '*.inc.js'])
-    .pipe( concat( 'scripts.min.js' ) )
-    .pipe( uglify() )
+  return gulp.src([js_dev + '*.js', '!' + js_dev + '*.add.js', '!' + js_dev + '*.inc.js'])
+    .pipe(sourcemaps.init())
+    .pipe(webpackStream({
+      mode: 'none',
+      output: {
+        filename: 'scripts.js',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env']
+            }
+          }
+        ]
+      }
+    }))
+    // .pipe( concat( 'scripts.min.js' ) )
+    // .pipe(gulp.dest(js))
+    .pipe(terser())
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(js));
+});
+
+// component's scripts
+gulp.task('component:dev', function() {
+  return gulp.src([js_dev + '*.inc.js'])
+    .pipe(webpackStream({
+      mode: 'none',
+      output: {
+        filename: 'component.js',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env']
+            }
+          }
+        ]
+      }
+    }))
     .pipe(gulp.dest(js))
     .pipe(browserSync.reload({
       stream: true
     }));
 });
 
-gulp.task('script:add', function() {
-  return gulp.src([js_dev + 'customizer.js', js_dev + '*.inc.js'])
-    .pipe( uglify() )
+gulp.task('component:min', function() {
+  return gulp.src([js_dev + '*.inc.js'])
+    .pipe(sourcemaps.init())
+    .pipe(webpackStream({
+      mode: 'none',
+      output: {
+        filename: 'component.js',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env']
+            }
+          }
+        ]
+      }
+    }))
+    .pipe(terser())
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(js));
+});
+
+// for jquery in admin area
+gulp.task('script:jq', function() {
+  return gulp.src([js_dev + '*.add.js'])
+    .pipe( terser() )
     .pipe(gulp.dest(js))
     .pipe(browserSync.reload({
       stream: true
     }));
 });
 
-gulp.task('script', gulp.parallel('script:min', 'script:add'));
+gulp.task('script', gulp.parallel('script:dev', 'script:min'));
+gulp.task('script:add', gulp.parallel('script:jq', 'component:dev', 'component:min'));
 
 gulp.task('img:dev', function() {
   return gulp.src(src + 'img/*')
@@ -173,6 +276,7 @@ gulp.task('svg', function() {
 gulp.task('watch', function() {
   gulp.watch(scss + '**/*.scss', gulp.series('style'));
   gulp.watch(js_dev + '**/*.js', gulp.series('script'));
+  // gulp.watch(js_dev + '**/*.js', gulp.series('script:add'));
   gulp.watch(src + 'img/**', gulp.series('img:build'));
 });
 
