@@ -222,16 +222,16 @@ gulp.task('component:min', function() {
 });
 
 // for jquery in admin area
-gulp.task('script:jq', function() {
-  return gulp.src([js_dev + '*.add.js'])
-    .pipe( terser() )
+gulp.task('script:jq', function () {
+  return gulp.src([js_dev + 'jq/*.js'])
+    .pipe(terser())
     .pipe(gulp.dest(js))
     .pipe(browserSync.reload({
-      stream: true
+        stream: true
     }));
 });
 
-gulp.task('script', gulp.parallel('script:dev', 'script:min'));
+gulp.task('script', gulp.parallel('script:dev', 'script:min', 'script:jq'));
 gulp.task('script:add', gulp.parallel('script:jq', 'component:dev', 'component:min'));
 
 gulp.task('img:dev', function() {
