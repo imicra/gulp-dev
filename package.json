@@ -9,7 +9,11 @@
     "Firefox ESR"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +21,7 @@
   "devDependencies": {
     "@babel/core": "^7.15.5",
     "@babel/preset-env": "^7.15.6",
+    "@babel/preset-react": "^7.22.15",
     "autoprefixer": "^9.8.0",
     "babel-core": "^4.7.16",
     "babel-loader": "^9.1.2",
@@ -38,6 +43,7 @@
     "gulp-svg-sprite": "^2.0.3",
     "gulp-svgmin": "^4.1.0",
     "gulp-terser": "^2.1.0",
+    "react-error-overlay": "^6.0.9",
     "sass": "^1.42.1",
     "webpack": "^5.54.0",
     "webpack-stream": "^7.0.0"
